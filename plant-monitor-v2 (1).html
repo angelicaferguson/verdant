@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Verdant — Plant Monitor</title>
+<!-- PWA: makes it installable as a home screen app on iPad/iPhone -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Verdant">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#4a6741">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%232d5228'/%3E%3Cdefs%3E%3CradialGradient id='cg' cx='50%25' cy='40%25' r='55%25'%3E%3Cstop offset='0%25' stop-color='%235aaa5a'/%3E%3Cstop offset='100%25' stop-color='%232d7a2d'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg fill='%231a6b42' stroke='%230d2e1e' stroke-width='3'%3E%3Cellipse cx='90' cy='32' rx='22' ry='30' transform='rotate(0 90 90)'/%3E%3Cellipse cx='90' cy='32' rx='22' ry='30' transform='rotate(45 90 90)'/%3E%3Cellipse cx='90' cy='32' rx='22' ry='30' transform='rotate(90 90 90)'/%3E%3Cellipse cx='90' cy='32' rx='22' ry='30' transform='rotate(135 90 90)'/%3E%3Cellipse cx='90' cy='32' rx='22' ry='30' transform='rotate(180 90 90)'/%3E%3Cellipse cx='90' cy='32' rx='22' ry='30' transform='rotate(225 90 90)'/%3E%3Cellipse cx='90' cy='32' rx='22' ry='30' transform='rotate(270 90 90)'/%3E%3Cellipse cx='90' cy='32' rx='22' ry='30' transform='rotate(315 90 90)'/%3E%3C/g%3E%3Ccircle cx='90' cy='90' r='40' fill='url(%23cg)' stroke='%230d2e1e' stroke-width='3'/%3E%3Ctext x='90' y='113' text-anchor='middle' font-family='Georgia,serif' font-size='52' font-weight='700' fill='%23c8d42a' stroke='%235a6800' stroke-width='1.5'%3EV%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='cg' cx='50%25' cy='40%25' r='55%25'%3E%3Cstop offset='0%25' stop-color='%235aaa5a'/%3E%3Cstop offset='100%25' stop-color='%232d7a2d'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg fill='%231a6b42' stroke='%230d2e1e' stroke-width='0.5'%3E%3Cellipse cx='16' cy='4' rx='4' ry='5.5' transform='rotate(0 16 16)'/%3E%3Cellipse cx='16' cy='4' rx='4' ry='5.5' transform='rotate(45 16 16)'/%3E%3Cellipse cx='16' cy='4' rx='4' ry='5.5' transform='rotate(90 16 16)'/%3E%3Cellipse cx='16' cy='4' rx='4' ry='5.5' transform='rotate(135 16 16)'/%3E%3Cellipse cx='16' cy='4' rx='4' ry='5.5' transform='rotate(180 16 16)'/%3E%3Cellipse cx='16' cy='4' rx='4' ry='5.5' transform='rotate(225 16 16)'/%3E%3Cellipse cx='16' cy='4' rx='4' ry='5.5' transform='rotate(270 16 16)'/%3E%3Cellipse cx='16' cy='4' rx='4' ry='5.5' transform='rotate(315 16 16)'/%3E%3C/g%3E%3Ccircle cx='16' cy='16' r='7' fill='url(%23cg)' stroke='%230d2e1e' stroke-width='0.5'/%3E%3Ctext x='16' y='20' text-anchor='middle' font-family='Georgia,serif' font-size='9' font-weight='700' fill='%23c8d42a'%3EV%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --soil: #3d2b1f; --moss: #4a6741; --sage: #7a9e76; --fern: #a8c5a0;
+    --mist: #ddebd8; --cream: #f5f0e8; --bark: #8b6f5e; --sun: #e8c96a;
+    --water: #6ab0d4; --alert: #d4724a; --warning: #e8a84a; --ok: #5a9e6f;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #2d5228;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 10% 20%, rgba(80,160,70,0.35) 0%, transparent 60%),
+      radial-gradient(ellipse at 90% 80%, rgba(30,80,25,0.5) 0%, transparent 50%);
+  }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+  .app {
+    max-width:420px; margin:0 auto;
+    padding:0 0 calc(40px + env(safe-area-inset-bottom));
+    position:relative; z-index:1;
+  }
+
+  /* PWA install banner */
+  .install-banner {
+    display: none;
+    margin: 16px 20px 0;
+    background: #4a6741;
+    border-radius: 14px;
+    padding: 14px 16px;
+    gap: 12px;
+    align-items: center;
+    animation: slideUp 0.4s ease both;
+  }
+  .install-banner.visible { display: flex; }
+  .install-banner-text { flex: 1; }
+  .install-banner-text strong { display: block; color: white; font-size: 13px; margin-bottom: 2px; }
+  .install-banner-text span { color: rgba(255,255,255,0.7); font-size: 11px; line-height: 1.4; display: block; }
+  .install-steps { margin-top: 8px; }
+  .install-step { display: flex; align-items: center; gap: 8px; padding: 4px 0; color: rgba(255,255,255,0.85); font-size: 12px; }
+  .step-num { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; flex-shrink: 0; }
+  .install-dismiss { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; align-self: flex-start; }
+
+  header { padding:36px 28px 24px; padding-top: calc(36px + env(safe-area-inset-top)); border-bottom:1px solid rgba(100,180,90,0.25); }
+  .logo { font-family:'Uncial Antiqua', 'Playfair Display', serif; font-size:28px; color:#a8e0a0; letter-spacing:-0.5px; }
+  .logo span { font-style:normal; color:#c8f0c0; }
+  .tagline { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#80c078; margin-top:3px; font-weight:300; }
+  .status-bar { display:flex; align-items:center; gap:6px; margin-top:14px; font-family:'DM Mono',monospace; font-size:11px; color:#80c078; }
+  .pulse-dot { width:7px; height:7px; border-radius:50%; background:var(--ok); transition:background 0.4s; }
+  .pulse-dot.live { animation:pulse 2s infinite; }
+  .pulse-dot.error { background:#d44a4a; }
+  .pulse-dot.connecting { background:var(--warning); animation:pulse 0.8s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+  /* Connection panel */
+  .conn-panel {
+    margin:20px 20px 0;
+    background:white;
+    border-radius:16px;
+    padding:20px;
+    border:1px solid rgba(168,197,160,0.3);
+    box-shadow:0 2px 12px rgba(61,43,31,0.06);
+  }
+  .conn-title { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--bark); margin-bottom:12px; font-weight:500; }
+  .conn-row { display:flex; gap:8px; align-items:center; }
+  .conn-input {
+    flex:1; padding:10px 14px; border-radius:10px; border:1px solid rgba(168,197,160,0.4);
+    background:var(--cream); font-family:'DM Mono',monospace; font-size:12px; color:var(--soil);
+    outline:none; transition:border 0.2s;
+  }
+  .conn-input:focus { border-color:var(--sage); }
+  .conn-btn {
+    padding:10px 16px; border-radius:10px; border:none; cursor:pointer;
+    background:var(--moss); color:white; font-family:'DM Sans',sans-serif;
+    font-size:13px; font-weight:500; transition:all 0.2s; white-space:nowrap;
+  }
+  .conn-btn:hover { background:var(--soil); }
+  .conn-hint { font-size:10.5px; color:var(--bark); margin-top:8px; font-family:'DM Mono',monospace; opacity:0.7; }
+
+  .demo-btn {
+    width:100%; margin-top:10px; padding:9px; border-radius:10px; border:1px dashed rgba(122,158,118,0.4);
+    background:transparent; color:var(--sage); font-family:'DM Sans',sans-serif; font-size:12px;
+    cursor:pointer; transition:all 0.2s;
+  }
+  .demo-btn:hover { background:var(--mist); }
+
+  /* Plant card */
+  .plant-card { margin:20px 20px 0; background:white; border-radius:20px; overflow:hidden; box-shadow:0 4px 24px rgba(61,43,31,0.08),0 1px 4px rgba(61,43,31,0.04); border:1px solid rgba(168,197,160,0.3); animation:slideUp 0.5s ease both; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .card-header { background:linear-gradient(135deg,var(--moss) 0%,var(--sage) 100%); padding:20px 22px; position:relative; overflow:hidden; display:flex; align-items:center; gap:16px; }
+  .plant-illustration { flex-shrink:0; width:76px; height:76px; border-radius:14px; background:rgba(0,0,0,0.15); border:2px solid rgba(255,255,255,0.2); overflow:hidden; box-shadow:0 3px 12px rgba(0,0,0,0.2); }
+  .plant-illustration svg { width:100%; height:100%; }
+  .plant-info { flex:1; min-width:0; }
+  .plant-name { font-family:'Playfair Display',serif; font-size:20px; color:white; font-weight:600; line-height:1.2; }
+  .plant-species { font-family:'Playfair Display',serif; font-style:italic; font-size:12px; color:rgba(255,255,255,0.7); margin-top:2px; }
+  .last-watered { font-size:11px; color:rgba(255,255,255,0.6); margin-top:8px; font-family:'DM Mono',monospace; }
+
+  /* Alert banner */
+  .alert-banner { margin:0 20px; border-radius:0 0 14px 14px; padding:12px 18px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:10px; transition:all 0.4s; }
+  .alert-banner.hidden { display:none; }
+  .alert-banner.thirsty { background:rgba(212,114,74,0.12); color:var(--alert); border:1px solid rgba(212,114,74,0.25); border-top:none; }
+  .alert-banner.wet { background:rgba(106,176,212,0.12); color:#3a7fa0; border:1px solid rgba(106,176,212,0.3); border-top:none; }
+  .alert-banner.warning { background:rgba(232,168,74,0.12); color:#9a6a1a; border:1px solid rgba(232,168,74,0.3); border-top:none; }
+  .alert-banner.ok { background:rgba(90,158,111,0.1); color:var(--ok); border:1px solid rgba(90,158,111,0.25); border-top:none; }
+
+  /* Sensors grid */
+  .sensors { padding:20px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .sensor-tile { background:var(--cream); border-radius:14px; padding:16px; border:1px solid rgba(168,197,160,0.3); position:relative; overflow:hidden; transition:transform 0.2s,box-shadow 0.2s; }
+  .sensor-tile:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(61,43,31,0.08); }
+  .sensor-tile.full-width { grid-column:span 2; }
+  .sensor-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--bark); font-weight:500; margin-bottom:8px; }
+  .sensor-value { font-family:'Playfair Display',serif; font-size:32px; color:var(--soil); line-height:1; }
+  .sensor-value .unit { font-size:14px; color:var(--bark); font-family:'DM Sans',sans-serif; font-weight:300; }
+  .sensor-sub { font-size:11px; color:var(--sage); margin-top:4px; font-family:'DM Mono',monospace; }
+  .moisture-bar-track { height:6px; background:rgba(168,197,160,0.3); border-radius:3px; margin-top:10px; overflow:hidden; }
+  .moisture-bar-fill { height:100%; border-radius:3px; transition:width 1.2s cubic-bezier(0.4,0,0.2,1),background 0.5s; }
+  .mini-gauge { width:100%; height:6px; background:linear-gradient(to right,#6ab0d4,#7ac47a,#e8c96a,#d4724a); border-radius:3px; margin-top:10px; position:relative; }
+  .gauge-needle { position:absolute; top:-3px; width:12px; height:12px; background:var(--soil); border-radius:50%; border:2px solid white; transform:translateX(-50%); transition:left 1.2s cubic-bezier(0.4,0,0.2,1); box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+  .light-dots { display:flex; gap:4px; margin-top:10px; }
+  .light-dot { width:8px; height:8px; border-radius:50%; background:rgba(168,197,160,0.3); transition:background 0.4s; }
+  .light-dot.active { background:var(--sun); }
+  .light-dot.active.bright { background:#d4a017; }
+
+  /* Chart */
+  .history-section { padding:0 20px 20px; }
+  .section-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--bark); margin-bottom:12px; font-weight:500; }
+  .chart-wrap { background:var(--cream); border-radius:14px; padding:16px; border:1px solid rgba(168,197,160,0.3); }
+  .chart-labels { display:flex; justify-content:space-between; margin-top:6px; }
+  .chart-labels span { font-family:'DM Mono',monospace; font-size:9px; color:var(--bark); opacity:0.6; }
+
+  /* Controls */
+  .controls { padding:0 20px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .btn { padding:13px 16px; border-radius:12px; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:7px; }
+  .btn-primary { background:var(--moss); color:white; box-shadow:0 2px 12px rgba(74,103,65,0.3); }
+  .btn-primary:hover { background:var(--soil); transform:translateY(-1px); }
+  .btn-secondary { background:white; color:var(--moss); border:1px solid rgba(122,158,118,0.4); }
+  .btn-secondary:hover { background:var(--mist); }
+
+  /* Notifications */
+  .notif-section { padding:20px 20px 0; }
+  .notif-item { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid rgba(168,197,160,0.2); animation:fadeIn 0.4s ease both; }
+  @keyframes fadeIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+  .notif-item:last-child { border-bottom:none; }
+  .notif-dot { width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+  .notif-body { flex:1; }
+  .notif-msg { font-size:13px; color:var(--soil); line-height:1.4; }
+  .notif-time { font-family:'DM Mono',monospace; font-size:10px; color:var(--bark); margin-top:2px; opacity:0.7; }
+  .leaf-divider { text-align:center; padding:20px 0 0; font-size:18px; opacity:0.3; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div style="display:flex;align-items:center;gap:12px">
+      <!-- Verdant flower logo — longer petals, squared tips, hand-drawn style -->
+      <svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="ctrGrad" cx="45%" cy="38%" r="58%">
+            <stop offset="0%"  stop-color="#5aaa5a"/>
+            <stop offset="100%" stop-color="#2d7a2d"/>
+          </radialGradient>
+          <filter id="roughen">
+            <feTurbulence type="turbulence" baseFrequency="0.06" numOctaves="2" seed="5" result="noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.65" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+        </defs>
+
+        <!-- 8 petals — long, narrow stem at base, wide flat squared-off tip
+             M = centre, curve out to wide flat top, curve back to centre -->
+        <g filter="url(#roughen)" stroke="#0d3018" stroke-width="1.15" stroke-linejoin="round" fill="#1a6b42">
+          <path d="M22 22
+                   C 20 17, 17 11, 16.5 5.5
+                   Q 16.5 1, 22 1
+                   Q 27.5 1, 27.5 5.5
+                   C 27 11, 24 17, 22 22Z"
+                transform="rotate(0   22 22)"/>
+          <path d="M22 22
+                   C 20 17, 17 11, 16.5 5.5
+                   Q 16.5 1, 22 1
+                   Q 27.5 1, 27.5 5.5
+                   C 27 11, 24 17, 22 22Z"
+                transform="rotate(45  22 22)"/>
+          <path d="M22 22
+                   C 20 17, 17 11, 16.5 5.5
+                   Q 16.5 1, 22 1
+                   Q 27.5 1, 27.5 5.5
+                   C 27 11, 24 17, 22 22Z"
+                transform="rotate(90  22 22)"/>
+          <path d="M22 22
+                   C 20 17, 17 11, 16.5 5.5
+                   Q 16.5 1, 22 1
+                   Q 27.5 1, 27.5 5.5
+                   C 27 11, 24 17, 22 22Z"
+                transform="rotate(135 22 22)"/>
+          <path d="M22 22
+                   C 20 17, 17 11, 16.5 5.5
+                   Q 16.5 1, 22 1
+                   Q 27.5 1, 27.5 5.5
+                   C 27 11, 24 17, 22 22Z"
+                transform="rotate(180 22 22)"/>
+          <path d="M22 22
+                   C 20 17, 17 11, 16.5 5.5
+                   Q 16.5 1, 22 1
+                   Q 27.5 1, 27.5 5.5
+                   C 27 11, 24 17, 22 22Z"
+                transform="rotate(225 22 22)"/>
+          <path d="M22 22
+                   C 20 17, 17 11, 16.5 5.5
+                   Q 16.5 1, 22 1
+                   Q 27.5 1, 27.5 5.5
+                   C 27 11, 24 17, 22 22Z"
+                transform="rotate(270 22 22)"/>
+          <path d="M22 22
+                   C 20 17, 17 11, 16.5 5.5
+                   Q 16.5 1, 22 1
+                   Q 27.5 1, 27.5 5.5
+                   C 27 11, 24 17, 22 22Z"
+                transform="rotate(315 22 22)"/>
+        </g>
+
+        <!-- Centre circle -->
+        <circle cx="22" cy="22" r="10" fill="url(#ctrGrad)" stroke="#0d3018" stroke-width="1.1" filter="url(#roughen)"/>
+
+        <!-- Serif V in Uncial Antiqua -->
+        <text x="22" y="28"
+              text-anchor="middle"
+              font-family="'Uncial Antiqua', Georgia, serif"
+              font-size="13.5"
+              font-weight="400"
+              fill="#c8d42a"
+              stroke="#4a5800"
+              stroke-width="0.5"
+              filter="url(#roughen)">V</text>
+      </svg>
+      <div class="logo">Verd<span>ant</span></div>
+    </div>
+    <div class="tagline">Plant Sensor Monitor</div>
+    <div class="status-bar">
+      <div class="pulse-dot connecting" id="connDot"></div>
+      <span id="connLabel">Not connected</span>
+    </div>
+  </header>
+
+  <!-- iPad/iPhone install banner -->
+  <div class="install-banner" id="installBanner">
+    <div class="install-banner-text">
+      <strong>📲 Add to your Home Screen</strong>
+      <span>Install Verdant as an app on your iPad for the best experience:</span>
+      <div class="install-steps">
+        <div class="install-step"><div class="step-num">1</div> Tap the <strong style="color:white">Share</strong> button (□↑) in Safari's toolbar</div>
+        <div class="install-step"><div class="step-num">2</div> Scroll down and tap <strong style="color:white">"Add to Home Screen"</strong></div>
+        <div class="install-step"><div class="step-num">3</div> Tap <strong style="color:white">Add</strong> — Verdant will appear on your home screen</div>
+      </div>
+    </div>
+    <button class="install-dismiss" onclick="dismissInstall()" title="Dismiss">✕</button>
+  </div>
+
+  <!-- Connection Panel -->
+  <div class="conn-panel" id="connPanel">
+    <div class="conn-title">Connect to sensor</div>
+    <div class="conn-row">
+      <input class="conn-input" id="ipInput" type="text" placeholder="192.168.1.xx  (ESP32 IP)" value=""/>
+      <button class="conn-btn" onclick="connectToSensor()">Connect</button>
+    </div>
+    <div class="conn-hint">Find the IP in your Arduino Serial Monitor after the ESP32 boots</div>
+    <button class="demo-btn" onclick="startDemo()">🌿 Run in demo mode (simulated data)</button>
+  </div>
+
+  <!-- Plant Card -->
+  <div class="plant-card">
+    <div class="card-header">
+
+      <!-- Monstera Albo Variegata SVG illustration -->
+      <div class="plant-illustration">
+        <svg viewBox="0 0 76 76" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background -->
+          <rect width="76" height="76" fill="#2d5228"/>
+
+          <!-- Pot -->
+          <rect x="27" y="58" width="22" height="3" rx="1.5" fill="#8B5E3C"/>
+          <path d="M24 61 L26 72 L50 72 L52 61 Z" fill="#A0703A"/>
+          <rect x="24" y="69" width="28" height="3" rx="1.5" fill="#8B5E3C"/>
+          <!-- Soil -->
+          <ellipse cx="38" cy="61" rx="11" ry="2.5" fill="#4a2e1a"/>
+
+          <!-- Main stem -->
+          <path d="M38 60 Q37 50 36 42 Q35 34 37 26" stroke="#4a7a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+          <!-- Leaf 1 — large left, with albo white variegation patch -->
+          <g transform="translate(36,36) rotate(-30)">
+            <!-- base green -->
+            <path d="M0,0 Q-14,-8 -18,-20 Q-14,-28 -8,-26 Q-4,-18 0,-16 Q4,-24 8,-22 Q12,-14 8,-6 Q4,-2 0,0Z"
+                  fill="#3a8a3a" stroke="#2d6e2d" stroke-width="0.5"/>
+            <!-- albo white patch — irregular blob covering ~40% of leaf -->
+            <path d="M0,-16 Q-3,-22 -7,-24 Q-11,-22 -10,-16 Q-8,-10 -4,-10 Q-1,-12 0,-16Z"
+                  fill="rgba(240,245,230,0.92)" stroke="none"/>
+            <!-- soft edge on white patch -->
+            <path d="M0,-16 Q-3,-22 -7,-24 Q-11,-22 -10,-16 Q-8,-10 -4,-10 Q-1,-12 0,-16Z"
+                  fill="none" stroke="#c8d8c0" stroke-width="0.4" opacity="0.6"/>
+            <!-- holes -->
+            <ellipse cx="-9" cy="-16" rx="2.5" ry="3.5" fill="#2d5228" transform="rotate(-10,-9,-16)"/>
+            <ellipse cx="-3" cy="-19" rx="2" ry="3" fill="#2d5228" transform="rotate(10,-3,-19)"/>
+            <!-- veins -->
+            <path d="M0,0 Q-9,-13 -13,-22" stroke="#2d7030" stroke-width="0.8" fill="none" opacity="0.5"/>
+            <path d="M-4,-10 Q-12,-14 -16,-18" stroke="#2d7030" stroke-width="0.5" fill="none" opacity="0.4"/>
+            <path d="M-2,-14 Q-6,-20 -8,-23" stroke="#2d7030" stroke-width="0.5" fill="none" opacity="0.4"/>
+          </g>
+
+          <!-- Leaf 2 — large right, half white albo -->
+          <g transform="translate(37,30) rotate(25)">
+            <!-- base green -->
+            <path d="M0,0 Q12,-6 16,-18 Q13,-27 7,-25 Q3,-17 0,-15 Q-3,-23 -7,-21 Q-11,-13 -7,-5 Q-3,-1 0,0Z"
+                  fill="#45a045" stroke="#338833" stroke-width="0.5"/>
+            <!-- albo patch — covers right portion of leaf -->
+            <path d="M0,-15 Q3,-20 7,-23 Q12,-22 14,-16 Q13,-10 9,-7 Q5,-6 0,-15Z"
+                  fill="rgba(240,245,228,0.9)" stroke="none"/>
+            <path d="M0,-15 Q3,-20 7,-23 Q12,-22 14,-16 Q13,-10 9,-7 Q5,-6 0,-15Z"
+                  fill="none" stroke="#c8d8b8" stroke-width="0.4" opacity="0.5"/>
+            <!-- holes -->
+            <ellipse cx="8" cy="-14" rx="2.2" ry="3.2" fill="#2d5228" transform="rotate(10,8,-14)"/>
+            <ellipse cx="2" cy="-18" rx="1.8" ry="2.8" fill="#2d5228" transform="rotate(-8,2,-18)"/>
+            <!-- vein -->
+            <path d="M0,0 Q8,-12 12,-20" stroke="#338833" stroke-width="0.8" fill="none" opacity="0.5"/>
+            <path d="M4,-9 Q10,-13 14,-16" stroke="#338833" stroke-width="0.5" fill="none" opacity="0.4"/>
+          </g>
+
+          <!-- Leaf 3 — small upper, mostly white albo (young leaves often very variegated) -->
+          <g transform="translate(36,24) rotate(-50)">
+            <path d="M0,0 Q-8,-4 -10,-13 Q-7,-18 -3,-16 Q0,-10 0,-8 Q3,-14 6,-12 Q8,-7 5,-3 Q2,-1 0,0Z"
+                  fill="#56bc56" stroke="#44a044" stroke-width="0.5"/>
+            <!-- nearly all-white variegation -->
+            <path d="M0,0 Q-6,-3 -8,-10 Q-6,-16 -2,-15 Q0,-10 0,-8 Q2,-12 5,-11 Q7,-7 4,-3 Q2,-1 0,0Z"
+                  fill="rgba(238,244,225,0.88)" stroke="none"/>
+            <path d="M0,0 Q-5,-8 -8,-14" stroke="#44a044" stroke-width="0.7" fill="none" opacity="0.5"/>
+          </g>
+
+          <!-- Leaf 4 — tiny new unfurled leaf, cream-white (albo new growth) -->
+          <g transform="translate(37,22)">
+            <path d="M0,0 Q-2,-6 0,-10 Q2,-6 0,0Z" fill="#e8f0d8" stroke="#b0c8a0" stroke-width="0.5"/>
+            <path d="M0,-2 Q1,-5 0,-8" stroke="#b0c898" stroke-width="0.8" fill="none"/>
+          </g>
+
+          <!-- Light glint on pot -->
+          <path d="M27 63 Q30 62 33 63" stroke="rgba(255,255,255,0.2)" stroke-width="1" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div class="plant-info">
+        <div class="plant-name">Monstera Albo Variegata</div>
+        <div class="plant-species">Variegated Swiss Cheese Plant</div>
+        <div class="last-watered" id="lastWatered">Last watered: —</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-banner hidden" id="alertBanner">
+    <span id="alertIcon"></span>
+    <span id="alertMsg"></span>
+  </div>
+
+  <!-- Sensors -->
+  <div class="sensors" style="margin:16px 0 0">
+    <div class="sensor-tile full-width">
+      <div class="sensor-label">Soil Moisture</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <div class="sensor-value" id="moistureVal">—<span class="unit">%</span></div>
+        <div class="sensor-sub" id="moistureStatus">waiting...</div>
+      </div>
+      <div class="moisture-bar-track">
+        <div class="moisture-bar-fill" id="moistureBar" style="width:0%;background:var(--sage)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px">
+        <span style="font-size:9px;color:var(--bark);font-family:'DM Mono',monospace">DRY</span>
+        <span style="font-size:9px;color:var(--bark);font-family:'DM Mono',monospace">IDEAL</span>
+        <span style="font-size:9px;color:var(--bark);font-family:'DM Mono',monospace">WET</span>
+      </div>
+    </div>
+
+    <div class="sensor-tile">
+      <div class="sensor-label">Temperature</div>
+      <div class="sensor-value" id="tempVal">—<span class="unit">°C</span></div>
+      <div class="sensor-sub" id="tempStatus">—</div>
+      <div class="mini-gauge"><div class="gauge-needle" id="tempNeedle" style="left:50%"></div></div>
+    </div>
+
+    <div class="sensor-tile">
+      <div class="sensor-label">Air Humidity</div>
+      <div class="sensor-value" id="humidVal">—<span class="unit">%</span></div>
+      <div class="sensor-sub" id="humidStatus">—</div>
+      <div class="moisture-bar-track" style="margin-top:10px">
+        <div class="moisture-bar-fill" id="humidBar" style="width:0%;background:var(--water)"></div>
+      </div>
+    </div>
+
+    <div class="sensor-tile full-width">
+      <div class="sensor-label">Light Level</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <div class="sensor-value" id="lightVal">—<span class="unit">lux</span></div>
+        <div class="sensor-sub" id="lightStatus">—</div>
+      </div>
+      <div class="light-dots" id="lightDots">
+        <div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div>
+        <div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div>
+        <div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div><div class="light-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="history-section">
+    <div class="section-label">Moisture — last 12 hours</div>
+    <div class="chart-wrap">
+      <canvas id="historyChart" style="width:100%;height:80px;display:block"></canvas>
+      <div class="chart-labels">
+        <span>12h ago</span><span>9h</span><span>6h</span><span>3h</span><span>now</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls" style="margin-top:16px">
+    <button class="btn btn-primary" onclick="logWatering()">💧 Log Watering</button>
+    <button class="btn btn-secondary" onclick="disconnectSensor()">⏹ Disconnect</button>
+  </div>
+
+  <!-- Notifications -->
+  <div class="notif-section">
+    <div class="section-label" style="padding-top:4px">Notifications</div>
+    <div id="notifList"></div>
+  </div>
+
+  <div class="leaf-divider">🌱</div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────
+let ws = null;
+let demoInterval = null;
+let isDemo = false;
+let historyData = [];
+let notifications = [];
+let prevAlertType = null;
+let lastWateredLabel = '—';
+let sensors = { moisture: 0, temperature: 0, humidity: 0, light: 0 };
+
+// Pre-fill chart history with zeros
+for (let i = 0; i < 48; i++) historyData.push(0);
+
+// ── WebSocket Connection ─────────────────────────────────────
+function connectToSensor() {
+  const ip = document.getElementById('ipInput').value.trim();
+  if (!ip) { alert('Please enter the ESP32 IP address'); return; }
+
+  stopDemo();
+  if (ws) ws.close();
+
+  setStatus('connecting', `Connecting to ${ip}…`);
+
+  ws = new WebSocket(`ws://${ip}/ws`);
+
+  ws.onopen = () => {
+    setStatus('live', `Live · ${ip}`);
+    addNotification('Connected to sensor at ' + ip, 'var(--ok)', '🔗');
+    document.getElementById('connPanel').style.opacity = '0.5';
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      applyReading(data);
+    } catch(err) {
+      console.error('Parse error:', err);
+    }
+  };
+
+  ws.onerror = () => {
+    setStatus('error', `Connection failed — check IP`);
+    addNotification('Could not reach sensor. Check IP and WiFi.', '#d44a4a', '⚠️');
+  };
+
+  ws.onclose = () => {
+    if (!isDemo) setStatus('error', 'Disconnected');
+  };
+}
+
+function disconnectSensor() {
+  if (ws) { ws.close(); ws = null; }
+  stopDemo();
+  setStatus('off', 'Not connected');
+  document.getElementById('connPanel').style.opacity = '1';
+}
+
+// ── Apply a reading (real or demo) ──────────────────────────
+function applyReading(data) {
+  sensors.moisture    = data.moisture    ?? sensors.moisture;
+  sensors.temperature = data.temperature ?? sensors.temperature;
+  sensors.humidity    = data.humidity    ?? sensors.humidity;
+  sensors.light       = data.light       ?? sensors.light;
+
+  historyData.push(sensors.moisture);
+  if (historyData.length > 96) historyData.shift();
+
+  updateDisplay();
+  drawChart();
+  checkAlerts();
+}
+
+// ── Display Update ───────────────────────────────────────────
+function updateDisplay() {
+  const s = sensors;
+
+  // Moisture
+  document.getElementById('moistureVal').innerHTML = `${s.moisture.toFixed(1)}<span class="unit">%</span>`;
+  const mb = document.getElementById('moistureBar');
+  mb.style.width = s.moisture + '%';
+  mb.style.background = s.moisture < 30 ? 'var(--alert)' : s.moisture > 75 ? 'var(--water)' : 'var(--sage)';
+  document.getElementById('moistureStatus').textContent =
+    s.moisture < 25 ? 'Very dry' : s.moisture < 35 ? 'Getting dry' :
+    s.moisture < 55 ? 'Optimal' : s.moisture < 70 ? 'Well watered' : 'Too wet';
+
+  // Temperature
+  document.getElementById('tempVal').innerHTML = `${s.temperature.toFixed(1)}<span class="unit">°C</span>`;
+  const tempPct = Math.max(0, Math.min(100, ((s.temperature - 5) / 35) * 100));
+  document.getElementById('tempNeedle').style.left = tempPct + '%';
+  document.getElementById('tempStatus').textContent =
+    s.temperature < 15 ? 'Too cold' : s.temperature > 28 ? 'Too warm' : 'Good range';
+
+  // Humidity
+  document.getElementById('humidVal').innerHTML = `${s.humidity.toFixed(0)}<span class="unit">%</span>`;
+  document.getElementById('humidBar').style.width = s.humidity + '%';
+  document.getElementById('humidStatus').textContent =
+    s.humidity < 30 ? 'Very dry air' : s.humidity < 50 ? 'Low' : s.humidity < 70 ? 'Ideal' : 'Humid';
+
+  // Light
+  const lux = Math.round(s.light);
+  document.getElementById('lightVal').innerHTML = `${lux.toLocaleString()}<span class="unit">lux</span>`;
+  document.getElementById('lightStatus').textContent =
+    lux < 500 ? 'Very low' : lux < 1500 ? 'Low light' : lux < 5000 ? 'Indirect' :
+    lux < 15000 ? 'Bright indirect' : 'Direct sun';
+  const dots = document.querySelectorAll('.light-dot');
+  const activeDots = Math.round((Math.min(lux, 20000) / 20000) * 10);
+  dots.forEach((d, i) => {
+    d.className = 'light-dot' + (i < activeDots ? (lux > 12000 ? ' active bright' : ' active') : '');
+  });
+}
+
+// ── Alert Logic ──────────────────────────────────────────────
+function getAlert(s) {
+  if (s.moisture < 25) return { type:'thirsty', icon:'🌵', msg:'Soil is very dry — time to water your plant!' };
+  if (s.moisture < 35) return { type:'warning', icon:'💧', msg:'Soil getting dry — consider watering soon.' };
+  if (s.moisture > 80) return { type:'wet',     icon:'🌊', msg:'Soil is too wet — risk of root rot. Hold off watering.' };
+  if (s.moisture > 70) return { type:'warning', icon:'☔', msg:'Soil is quite moist — no watering needed yet.' };
+  if (s.temperature > 30) return { type:'warning', icon:'🌡️', msg:'Too warm! Move plant away from direct heat.' };
+  if (s.temperature < 12) return { type:'warning', icon:'❄️', msg:'Too cold! Bring plant to a warmer spot.' };
+  return { type:'ok', icon:'✅', msg:"All good — your plant is happy!" };
+}
+
+function checkAlerts() {
+  const alert = getAlert(sensors);
+  const el = document.getElementById('alertBanner');
+  el.className = `alert-banner ${alert.type}`;
+  document.getElementById('alertIcon').textContent = alert.icon;
+  document.getElementById('alertMsg').textContent = alert.msg;
+
+  if (alert.type !== prevAlertType && prevAlertType !== null) {
+    const colors = { thirsty:'var(--alert)', wet:'var(--water)', warning:'var(--warning)', ok:'var(--ok)' };
+    const msgs = {
+      thirsty: '🌵 Plant is thirsty — watering needed!',
+      wet:     '🌊 Soil too wet — hold off watering.',
+      warning: '⚠️ Sensor alert — check your plant.',
+      ok:      '✅ Conditions back to normal.'
+    };
+    addNotification(msgs[alert.type], colors[alert.type], '');
+  }
+  prevAlertType = alert.type;
+}
+
+// ── Chart ────────────────────────────────────────────────────
+function drawChart() {
+  const canvas = document.getElementById('historyChart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth, H = 80;
+  canvas.width = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+
+  const data = historyData.slice(-48);
+  const step = W / (data.length - 1);
+
+  ctx.fillStyle = 'rgba(212,114,74,0.07)'; ctx.fillRect(0, H*0.65, W, H*0.35);
+  ctx.fillStyle = 'rgba(106,176,212,0.07)'; ctx.fillRect(0, 0, W, H*0.2);
+  ctx.fillStyle = 'rgba(90,158,111,0.06)'; ctx.fillRect(0, H*0.2, W, H*0.45);
+
+  const grad = ctx.createLinearGradient(0,0,W,0);
+  grad.addColorStop(0,'#7a9e76'); grad.addColorStop(1,'#4a6741');
+  ctx.beginPath();
+  data.forEach((v,i) => {
+    const x = i*step, y = H - (v/100)*H;
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle = grad; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.stroke();
+
+  const areaGrad = ctx.createLinearGradient(0,0,0,H);
+  areaGrad.addColorStop(0,'rgba(122,158,118,0.2)'); areaGrad.addColorStop(1,'rgba(122,158,118,0)');
+  ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath();
+  ctx.fillStyle = areaGrad; ctx.fill();
+
+  const lastX = (data.length-1)*step, lastY = H - (data[data.length-1]/100)*H;
+  ctx.beginPath(); ctx.arc(lastX,lastY,4,0,Math.PI*2);
+  ctx.fillStyle='#4a6741'; ctx.fill();
+  ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
+}
+
+// ── Notifications ────────────────────────────────────────────
+function addNotification(msg, color, icon) {
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  notifications.unshift({msg, color, icon, time});
+  if (notifications.length > 8) notifications.pop();
+  document.getElementById('notifList').innerHTML = notifications.map((n,i) => `
+    <div class="notif-item" style="animation-delay:${i*0.05}s">
+      <div class="notif-dot" style="background:${n.color}"></div>
+      <div class="notif-body">
+        <div class="notif-msg">${n.icon} ${n.msg}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Status bar ───────────────────────────────────────────────
+function setStatus(state, label) {
+  const dot = document.getElementById('connDot');
+  dot.className = 'pulse-dot ' + (state === 'live' ? 'live' : state === 'connecting' ? 'connecting' : state === 'error' ? 'error' : '');
+  document.getElementById('connLabel').textContent = label;
+}
+
+// ── Actions ──────────────────────────────────────────────────
+function logWatering() {
+  sensors.moisture = Math.min(90, sensors.moisture + 35);
+  lastWateredLabel = 'just now';
+  document.getElementById('lastWatered').textContent = 'Last watered: just now';
+  addNotification('Watering logged manually.', 'var(--water)', '💧');
+  historyData.push(sensors.moisture);
+  if (historyData.length > 96) historyData.shift();
+  updateDisplay(); drawChart(); checkAlerts();
+}
+
+// ── Demo Mode ────────────────────────────────────────────────
+let demoTick = 0;
+function startDemo() {
+  stopDemo();
+  isDemo = true;
+  sensors = { moisture: 65, temperature: 21, humidity: 58, light: 4200 };
+  // Seed history
+  historyData = [];
+  for (let i=0;i<48;i++) historyData.push(Math.max(10, 65 - i*0.4 + (Math.random()*4-2)));
+  setStatus('live', 'Demo mode — simulated data');
+  addNotification('Running in demo mode — no sensor connected.', 'var(--sage)', '🌿');
+  document.getElementById('connPanel').style.opacity = '0.5';
+  prevAlertType = null;
+  demoInterval = setInterval(() => {
+    demoTick++;
+    sensors.moisture = Math.max(10, Math.min(95, sensors.moisture - 0.12 + (Math.random()*0.1-0.05)));
+    sensors.temperature = Math.max(8, Math.min(34, sensors.temperature + (Math.random()*0.2-0.1)));
+    sensors.humidity = Math.max(20, Math.min(90, sensors.humidity + (Math.random()*0.4-0.2)));
+    const phase = (demoTick % 200)/200;
+    sensors.light = Math.max(50, 1000 + Math.sin(phase*Math.PI)*14000 + (Math.random()*500));
+    applyReading(sensors);
+  }, 800);
+}
+
+function stopDemo() {
+  isDemo = false;
+  if (demoInterval) { clearInterval(demoInterval); demoInterval = null; }
+}
+
+// ── Boot ─────────────────────────────────────────────────────
+drawChart();
+window.addEventListener('resize', drawChart);
+
+// ── PWA Install Banner ────────────────────────────────────────
+function dismissInstall() {
+  document.getElementById('installBanner').classList.remove('visible');
+  sessionStorage.setItem('installDismissed', '1');
+}
+
+// Show the install banner if:
+// - running in Safari on iOS/iPadOS
+// - NOT already installed as a PWA (standalone)
+// - user hasn't dismissed it this session
+(function() {
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  const dismissed = sessionStorage.getItem('installDismissed');
+  if (isIos && !isStandalone && !dismissed) {
+    // Small delay so it doesn't flash on load
+    setTimeout(() => {
+      document.getElementById('installBanner').classList.add('visible');
+    }, 1200);
+  }
+})();
+</script>
+</body>
+</html>
